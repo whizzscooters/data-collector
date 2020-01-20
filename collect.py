@@ -18,6 +18,10 @@ import logging
 import random
 import time
 
+import socket
+from time import sleep
+
+
 try:
     import numpy as np
 except ImportError:
@@ -325,6 +329,7 @@ def collect(client, args):
             if episode_ended:
                 if episode_success:
                     episode_number += 1
+                    sleep(2)
                 else:
                     # If the episode did go well and we were recording, delete this episode
                     if not args.not_record:

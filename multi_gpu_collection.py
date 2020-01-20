@@ -7,6 +7,9 @@ import multiprocessing
 from carla.client import make_carla_client
 from carla.tcp import TCPConnectionError
 
+from contextlib import closing
+import socket
+
 from collect import collect
 
 
@@ -41,6 +44,11 @@ def execute_collector(args):
     p = multiprocessing.Process(target=collect_loop,
                                 args=(args,))
     p.start()
+
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
 
 # open a carla docker with the container_name
 def open_carla(port, town_name, gpu, container_name):
@@ -102,11 +110,12 @@ if __name__ == '__main__':
     town_name = 'Town0' + str(args.town_name)
 
     for i in range(args.number_collectors):
-        port = 2000 + i * 3
+        
+        port = 2000 + i*3
         gpu = str(int(i / args.carlas_per_gpu))
         collector_args = Arguments(port, args.number_episodes,
-                                   args.start_episode + (args.number_episodes) * (i),
-                                   args.data_path,
-                                   args.data_configuration_name)
+                                args.start_episode + (args.number_episodes) * (i),
+                                args.data_path,
+                                args.data_configuration_name)
         execute_collector(collector_args)
         open_carla(port, town_name, gpu, args.container_name)
