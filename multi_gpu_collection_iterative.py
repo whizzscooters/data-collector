@@ -27,7 +27,7 @@ class Arguments():
         self.controlling_agent = 'CommandFollower'
         self.data_path = path_name
         self.data_configuration_name = data_configuration_name
-        self.overwrite_weather
+        self.overwrite_weather = overwrite_weather
 
 
 def collect_loop(args):
@@ -108,13 +108,17 @@ if __name__ == '__main__':
     argparser.add_argument(
         '-w', '--overwrite_weather',
         dest='overwrite_weather',
-        default=-1,
+        default='-1',
         help='Force weather to be a certain index (for validation)'
     )
     args = argparser.parse_args()
-
+    
     town_name = 'Town0' + str(args.town_name)
+    overwrite_weather = args.overwrite_weather.split(',')
+    overwrite_weather = [int(i) for i in overwrite_weather]
 
+    print(overwrite_weather)
+    
     for i in range(args.number_collectors):
         
         port = 2000 + i*3
@@ -123,6 +127,6 @@ if __name__ == '__main__':
                                 args.start_episode + (args.number_episodes) * (i),
                                 args.data_path,
                                 args.data_configuration_name,
-                                args.overwrite_weather)
+                                overwrite_weather[ i % len(overwrite_weather) ])
         execute_collector(collector_args)
         open_carla(port, town_name, gpu, args.container_name)
