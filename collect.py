@@ -173,6 +173,7 @@ def reset_episode(client, carla_game, settings_module, show_render):
 
     timeout = calculate_timeout(player_start_spots[random_pose[0]],
                                 player_target_transform, planner)
+
     episode_characteristics = {
         "town_name": town_name,
         "player_target_transform": player_target_transform,
@@ -216,6 +217,10 @@ def collect(client, args):
     # passed as a parameter.
     settings_module = __import__('dataset_configurations.' + (args.data_configuration_name),
                                  fromlist=['dataset_configurations'])
+
+     # Overwrite weather if valid
+    if args.overwrite_weather != -1:
+        settings_module.set_of_weathers = [args.overwrite_weather]
 
     # Suppress output to some logfile, that is useful when running a massive number of collectors
     if not args.verbose:
@@ -462,7 +467,13 @@ def main():
         dest='number_of_episodes',
         default=999999999,
         help='The number of episodes to run, default infinite.')
-
+    argparser.add_argument(
+        '-w', '--overwrite_weather',
+        dest='overwrite_weather',
+        default=-1,
+        type=int,
+        help='Force weather to be a certain index (for validation)'
+    )
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
