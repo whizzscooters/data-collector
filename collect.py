@@ -176,10 +176,12 @@ def reset_episode(client, carla_game, settings_module, show_render):
 
     episode_characteristics = {
         "town_name": town_name,
+        "player_start_transform": player_start_spots[random_pose[0]],
         "player_target_transform": player_target_transform,
         "last_episode_time": last_episode_time,
         "timeout": timeout,
         "weather": weather,
+        "pose": random_pose,
         "number_of_vehicles": number_of_vehicles,
         "number_of_pedestrians": number_of_pedestrians,
         "seeds_vehicles": seeds_vehicles,

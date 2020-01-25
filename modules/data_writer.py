@@ -68,11 +68,20 @@ def add_episode_metadata(dataset_path, episode_number, episode_aspects):
     with open(os.path.join(dataset_path, 'episode_' + episode_number, 'metadata.json'), 'w') as fo:
 
         jsonObj = {}
+        jsonObj.update({'town_name': episode_aspects['town_name']})
         jsonObj.update({'number_of_pedestrian': episode_aspects['number_of_pedestrians']})
         jsonObj.update({'number_of_vehicles': episode_aspects['number_of_vehicles']})
         jsonObj.update({'seeds_pedestrians': episode_aspects['seeds_pedestrians']})
         jsonObj.update({'seeds_vehicles': episode_aspects['seeds_vehicles']})
         jsonObj.update({'weather': episode_aspects['weather']})
+        
+        poses_str = str(episode_aspects['pose']) 
+        start_transform_str = str(episode_aspects['player_start_transform']).replace('\n', '')
+        target_transform_str = str(episode_aspects['player_target_transform']).replace('\n', '')
+        
+        jsonObj.update({'pose': poses_str })
+        jsonObj.update({'player_start_transform': start_transform_str })
+        jsonObj.update({'player_target_transform': target_transform_str })
         fo.write(json.dumps(jsonObj, sort_keys=True, indent=4))
 
 
