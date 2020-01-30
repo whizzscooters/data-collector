@@ -23,7 +23,7 @@ class Arguments():
         self.episode_number = episode_number
         self.not_record = False
         self.debug = False
-        self.verbose = False
+        self.verbose = True
         self.controlling_agent = 'CommandFollower'
         self.data_path = path_name
         self.data_configuration_name = data_configuration_name
