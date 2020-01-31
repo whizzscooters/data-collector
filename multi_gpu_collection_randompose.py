@@ -10,13 +10,13 @@ from carla.tcp import TCPConnectionError
 from contextlib import closing
 import socket
 
-from collect_iterative import collect
+from collect_randompose import collect
 
 
 class Arguments():
     # Some replacement to the arguments input to simplify the interface.
     def __init__(self, port, number_of_episodes, episode_number, path_name,
-                 data_configuration_name, overwrite_weather, csv_file):
+                 data_configuration_name, overwrite_weather):
         self.port = port
         self.host = 'localhost'
         self.number_of_episodes = number_of_episodes
@@ -28,7 +28,6 @@ class Arguments():
         self.data_path = path_name
         self.data_configuration_name = data_configuration_name
         self.overwrite_weather = overwrite_weather
-        self.csv_file = csv_file
 
 
 def collect_loop(args):
@@ -112,15 +111,8 @@ if __name__ == '__main__':
         default='-1',
         help='Force weather to be a certain index (for validation)'
     )
-    argparser.add_argument(
-        '-csv', '--csv_file',
-        dest='csv_file',
-        type=str,
-        default=None,
-        help='To continue iterating through poses from pervious stop'
-    )
     args = argparser.parse_args()
-    
+
     town_name = 'Town0' + str(args.town_name)
     overwrite_weather = args.overwrite_weather.split(',')
     overwrite_weather = [int(i) for i in overwrite_weather]
@@ -129,13 +121,12 @@ if __name__ == '__main__':
     
     for i in range(args.number_collectors):
         
-        port = 2003 + i*3
+        port = 2000 + i*3
         gpu = str(int(i / args.carlas_per_gpu))
         collector_args = Arguments(port, args.number_episodes,
                                 args.start_episode + (args.number_episodes) * (i),
                                 args.data_path,
                                 args.data_configuration_name,
-                                overwrite_weather[ i % len(overwrite_weather) ],
-                                args.csv_file)
+                                overwrite_weather[ i % len(overwrite_weather) ])
         execute_collector(collector_args)
         open_carla(port, town_name, gpu, args.container_name)

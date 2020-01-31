@@ -17,7 +17,6 @@ import argparse
 import logging
 import random
 import time
-import pandas as pd
 
 import socket
 from time import sleep
@@ -45,42 +44,6 @@ MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 # This is the number of frames that the car takes to fall from the ground
 NUMBER_OF_FRAMES_CAR_FLIES = 25  # multiply by ten
-
-
-class position_selector():
-
-    def __init__(self, all_positions, csv_file=None):
-        self.all_positions = all_positions
-        self.all_positions_len = len(all_positions)
-        self.iteration = -1
-        self.csv_file = csv_file
-        if csv_file is not None:
-            self.existing_metadata = pd.read_csv(csv_file)
-
-    def get_pose(self, weather):
-        
-        if self.iteration == self.all_positions_len - 1:
-            # self.iteration = 0
-            return (-1)     # kills collector when reaches end of poses
-        else:
-            self.iteration += 1
-
-        # skip poses that exist already
-        if self.csv_file is not None:
-            pose1, pose2 = self.all_positions[self.iteration]
-
-            while ((self.existing_metadata['weather']==weather) & \
-                   (self.existing_metadata['pose1']==pose1) & \
-                   (self.existing_metadata['pose2']==pose2)).any():
-                
-                print('skipping %s,%s' %(pose1, pose2))
-                self.iteration += 1
-                pose1, pose2 = self.all_positions[self.iteration]
-
-        selected_pose = self.all_positions[self.iteration]
-        print('pose selected %s' %selected_pose)
-
-        return selected_pose
 
 
 def make_controlling_agent(args, town_name):
@@ -126,7 +89,8 @@ def get_directions(measurements, target_transform, planner):
     return directions
 
 
-def new_episode(client, carla_settings, position, vehicle_pair, pedestrian_pair, weather):
+
+def new_episode(client, carla_settings, vehicle_pair, pedestrian_pair, set_of_weathers):
     """
     Start a CARLA new episode and generate a target to be pursued on this episode
     Args:
@@ -141,17 +105,21 @@ def new_episode(client, carla_settings, position, vehicle_pair, pedestrian_pair,
     # Every time the seeds for the episode are different
     number_of_vehicles = random.randint(vehicle_pair[0], vehicle_pair[1])
     number_of_pedestrians = random.randint(pedestrian_pair[0], pedestrian_pair[1])
-    
+    weather = random.choice(set_of_weathers)
     carla_settings.set(
         NumberOfVehicles=number_of_vehicles,
         NumberOfPedestrians=number_of_pedestrians,
         WeatherId=weather
     )
     scene = client.load_settings(carla_settings)
-    client.start_episode(position)
+    n_start_points = len(scene.player_start_spots)
 
-    return scene.map_name, scene.player_start_spots, number_of_vehicles, number_of_pedestrians, \
-           carla_settings.SeedVehicles, carla_settings.SeedPedestrians
+    random_pose = [random.randint(0, n_start_points-1), random.randint(0, n_start_points-1)]
+
+    client.start_episode(random_pose[0])
+
+    return scene.map_name, scene.player_start_spots, weather, number_of_vehicles, number_of_pedestrians, \
+           carla_settings.SeedVehicles, carla_settings.SeedPedestrians, random_pose
 
 
 def check_episode_has_noise(lat_noise_percent, long_noise_percent):
@@ -183,18 +151,14 @@ def calculate_timeout(start_point, end_point, planner):
     return ((path_distance / 1000.0) / 5.0) * 3600.0 + 10.0
 
 
-def reset_episode(client, carla_game, settings_module, pos_selector, show_render):
+def reset_episode(client, carla_game, settings_module, show_render):
 
-    weather = random.choice(settings_module.set_of_weathers)
-    print(weather)
-    random_pose = pos_selector.get_pose(weather)
-    town_name, player_start_spots, number_of_vehicles, number_of_pedestrians, \
-        seeds_vehicles, seeds_pedestrians = new_episode(client,
+    town_name, player_start_spots, weather, number_of_vehicles, number_of_pedestrians, \
+        seeds_vehicles, seeds_pedestrians, random_pose = new_episode(client,
                                                         settings_module.make_carla_settings(),
-                                                        random_pose[0],
                                                         settings_module.NumberOfVehicles,
                                                         settings_module.NumberOfPedestrians,
-                                                        weather)
+                                                        settings_module.set_of_weathers)
 
     # Here when verbose is activated we also show the rendering window.
     carla_game.initialize_game(town_name, render_mode=show_render)
@@ -211,7 +175,7 @@ def reset_episode(client, carla_game, settings_module, pos_selector, show_render
 
     timeout = calculate_timeout(player_start_spots[random_pose[0]],
                                 player_target_transform, planner)
-    
+
     episode_characteristics = {
         "town_name": town_name,
         "player_start_transform": player_start_spots[random_pose[0]],
@@ -223,7 +187,7 @@ def reset_episode(client, carla_game, settings_module, pos_selector, show_render
         "number_of_vehicles": number_of_vehicles,
         "number_of_pedestrians": number_of_pedestrians,
         "seeds_vehicles": seeds_vehicles,
-        "seeds_pedestrians": seeds_pedestrians,
+        "seeds_pedestrians": seeds_pedestrians
     }
 
     return episode_characteristics
@@ -258,7 +222,7 @@ def collect(client, args):
     settings_module = __import__('dataset_configurations.' + (args.data_configuration_name),
                                  fromlist=['dataset_configurations'])
 
-    # Overwrite weather if valid
+     # Overwrite weather if valid
     if args.overwrite_weather != -1:
         settings_module.set_of_weathers = [args.overwrite_weather]
 
@@ -276,9 +240,8 @@ def collect(client, args):
 
     ##### Start the episode #####
     # ! This returns all the aspects from the episodes.
-    pos_selector = position_selector(settings_module.POSITIONS, args.csv_file)
     episode_aspects = reset_episode(client, carla_game,
-                                    settings_module, pos_selector, args.debug)
+                                    settings_module, args.debug)
     planner = Planner(episode_aspects["town_name"])
     # We instantiate the agent, depending on the parameter
     controlling_agent = make_controlling_agent(args, episode_aspects["town_name"])
@@ -387,7 +350,7 @@ def collect(client, args):
 
                 # We reset the episode and receive all the characteristics of this episode.
                 episode_aspects = reset_episode(client, carla_game,
-                                                settings_module, pos_selector, args.debug)
+                                                settings_module, args.debug)
 
                 writer.add_episode_metadata(args.data_path, str(episode_number).zfill(5),
                                             episode_aspects)
@@ -514,13 +477,6 @@ def main():
         default=-1,
         type=int,
         help='Force weather to be a certain index (for validation)'
-    )
-    argparser.add_argument(
-        '-csv', '--csv_file',
-        dest='csv_file',
-        default=None,
-        type=str,
-        help='To continue iterating through poses from pervious stop'
     )
     args = argparser.parse_args()
 

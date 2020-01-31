@@ -30,32 +30,44 @@ echo "COIL_DATASET_PATH used: $COIL_DATASET_PATH"
 
 
 # ITERATIVE VERSION
-python /home/whizz/Desktop/data-collector/multi_gpu_collection_iterative.py \
-    --number_collectors=4 \
-    --number_episodes=70 \
-    --carlas_per_gpu=4 \
-    --start_episode=0 \
-    --data-configuration-name='coil_training_dataset' \
-    --data-path='/home/whizz/Desktop/coil-datasets/Carla100_iterative' \
-    --container-name='carlagear' \
-    --town_name='1' \
-    --overwrite_weather='1,3,6,8'
+# python /home/whizz/Desktop/data-collector/multi_gpu_collection_iterative.py \
+#     --number_collectors=4 \
+#     --number_episodes=70 \
+#     --carlas_per_gpu=4 \
+#     --start_episode=1000 \
+#     --data-configuration-name='coil_training_dataset' \
+#     --data-path='/home/whizz/Desktop/coil-datasets/Carla100_iterative' \
+#     --container-name='carlagear' \
+#     --town_name='1' \
+#     --overwrite_weather='1,3,6,8' \
+#     --csv_file='/home/whizz/Desktop/coil-datasets/Carla100_iterative/collated_metadata.csv'
 
 
 
 # NON ITERATIVE VERSIONS
 # python /home/whizz/Desktop/data-collector/multi_gpu_collection.py \
-#     --number_collectors=4 \
-#     --number_episodes=3 \
-#     --carlas_per_gpu=4 \
-#     --start_episode=100 \
+#     --number_collectors=1 \
+#     --number_episodes=12 \
+#     --carlas_per_gpu=1 \
+#     --start_episode=104 \
 #     --data-configuration-name='coil_training_dataset' \
-#     --data-path='/home/whizz/Desktop/coil-datasets/Carla100_test' \
+#     --data-path='/home/whizz/Desktop/coil-datasets/Carla100_Val1_CorrectWeather' \
 #     --container-name='carlagear' \
 #     --town_name='1' \
-#     --overwrite_weather=8
+#     --overwrite_weather='1'
+
+# python /home/whizz/Desktop/data-collector/multi_gpu_collection_randompose.py \
+#     --number_collectors=1 \
+#     --number_episodes=6 \
+#     --carlas_per_gpu=1 \
+#     --start_episode=210 \
+#     --data-configuration-name='coil_training_dataset' \
+#     --data-path='/home/whizz/Desktop/coil-datasets/Carla100_Val2_CorrectWeather' \
+#     --container-name='carlagear' \
+#     --town_name='2' \
+#     --overwrite_weather='8'
 
 
 # COLLATE EPISODE METADATA INTO CSV
-# python /home/whizz/Desktop/data-collector/tools/collate_metadata.py \
-#     --dataset_path="/home/whizz/Desktop/coil-datasets/Carla100_test"
+python /home/whizz/Desktop/data-collector/tools/collate_metadata.py \
+    --dataset_path="/home/whizz/Desktop/coil-datasets/Carla100_Val1_CorrectWeather"
