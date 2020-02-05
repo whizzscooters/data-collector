@@ -370,7 +370,11 @@ def collect(client, args):
                                       controller_state,
                                       args.data_path, str(episode_number).zfill(5),
                                       str(image_count - NUMBER_OF_FRAMES_CAR_FLIES),
-                                      settings_module.sensors_frequency)
+                                      settings_module.sensors_frequency,
+                                      settings_module.TOP_CROP, 
+                                      settings_module.BOTTOM_CROP, 
+                                      settings_module.RESIZED_WINDOW_WIDTH, 
+                                      settings_module.RESIZED_WINDOW_HEIGHT)
             # End the loop by sending control
             client.send_control(control_noise_f)
             # Add one more image to the counting
