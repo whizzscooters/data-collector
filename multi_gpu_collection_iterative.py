@@ -16,7 +16,7 @@ from collect_iterative import collect
 class Arguments():
     # Some replacement to the arguments input to simplify the interface.
     def __init__(self, port, number_of_episodes, episode_number, path_name,
-                 data_configuration_name, overwrite_weather, csv_file):
+                 data_configuration_name, overwrite_weather, csv_file, overwrite_noise_perc):
         self.port = port
         self.host = 'localhost'
         self.number_of_episodes = number_of_episodes
@@ -29,6 +29,7 @@ class Arguments():
         self.data_configuration_name = data_configuration_name
         self.overwrite_weather = overwrite_weather
         self.csv_file = csv_file
+        self.overwrite_noise_perc = overwrite_noise_perc
 
 
 def collect_loop(args):
@@ -119,6 +120,13 @@ if __name__ == '__main__':
         default=None,
         help='To continue iterating through poses from pervious stop'
     )
+    argparser.add_argument(
+        '-np', '--overwrite_noise_perc',
+        dest='overwrite_noise_perc',
+        default=-1.0,
+        type=float,
+        help='Force percentage of images with noise to be a certain number (for validation)'
+    )
     args = argparser.parse_args()
     
     town_name = 'Town0' + str(args.town_name)
@@ -129,13 +137,14 @@ if __name__ == '__main__':
     
     for i in range(args.number_collectors):
         
-        port = 2003 + i*3
+        port = 2000 + i*3
         gpu = str(int(i / args.carlas_per_gpu))
         collector_args = Arguments(port, args.number_episodes,
                                 args.start_episode + (args.number_episodes) * (i),
                                 args.data_path,
                                 args.data_configuration_name,
                                 overwrite_weather[ i % len(overwrite_weather) ],
-                                args.csv_file)
+                                args.csv_file,
+                                args.overwrite_noise_perc)
         execute_collector(collector_args)
         open_carla(port, town_name, gpu, args.container_name)

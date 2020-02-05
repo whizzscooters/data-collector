@@ -163,6 +163,8 @@ def check_episode_has_noise(lat_noise_percent, long_noise_percent):
     if random.randint(0, 101) < long_noise_percent:
         long_noise = True
 
+    print('laternal noise %s, longitudinal noise %s' %(lat_noise, long_noise))
+    
     return lat_noise, long_noise
 
 
@@ -261,7 +263,11 @@ def collect(client, args):
     # Overwrite weather if valid
     if args.overwrite_weather != -1:
         settings_module.set_of_weathers = [args.overwrite_weather]
-
+    # Overwrite noise percentage if valid
+    if args.overwrite_noise_perc != -1.0:
+        settings_module.lat_noise_percent = args.overwrite_noise_perc
+        settings_module.long_noise_percent = args.overwrite_noise_perc
+    
     # Suppress output to some logfile, that is useful when running a massive number of collectors
     if not args.verbose:
         suppress_logs(args.episode_number)
@@ -290,7 +296,7 @@ def collect(client, args):
     episode_lateral_noise, episode_longitudinal_noise = check_episode_has_noise(
         settings_module.lat_noise_percent,
         settings_module.long_noise_percent)
-
+    
     ##### DATASET writer initialization #####
     # here we make the full path for the dataset that is going to be created.
     # Make dataset path
@@ -401,7 +407,11 @@ def collect(client, args):
                                       controller_state,
                                       args.data_path, str(episode_number).zfill(5),
                                       str(image_count - NUMBER_OF_FRAMES_CAR_FLIES),
-                                      settings_module.sensors_frequency)
+                                      settings_module.sensors_frequency,
+                                      settings_module.TOP_CROP, 
+                                      settings_module.BOTTOM_CROP, 
+                                      settings_module.RESIZED_WINDOW_WIDTH, 
+                                      settings_module.RESIZED_WINDOW_HEIGHT)
             # End the loop by sending control
             client.send_control(control_noise_f)
             # Add one more image to the counting
@@ -521,6 +531,13 @@ def main():
         default=None,
         type=str,
         help='To continue iterating through poses from pervious stop'
+    )
+    argparser.add_argument(
+        '-np', '--overwrite_noise_perc',
+        dest='overwrite_noise_perc',
+        default=-1.0,
+        type=float,
+        help='Force percentage of images with noise to be a certain number (for validation)'
     )
     args = argparser.parse_args()
 

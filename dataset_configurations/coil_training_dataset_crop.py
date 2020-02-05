@@ -4,13 +4,13 @@ from carla.settings import CarlaSettings
 Configuration file used to collect the CARLA 100 data.
 A more simple comment example can be found at coil_training_dataset_singlecamera.py
 """
-TOP_CROP = 0
-BOTTOM_CROP = 0
+TOP_CROP = 125
+BOTTOM_CROP = 90
 RESIZED_WINDOW_WIDTH = 200
 RESIZED_WINDOW_HEIGHT = 88
 
-WINDOW_WIDTH = 200
-WINDOW_HEIGHT = 88
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
 
 POSITIONS = [ [29, 105], [130, 27], [87, 102], [27, 132], [44, 24],
               [26, 96], [67, 34], [1, 28], [134, 140], [9, 105],
